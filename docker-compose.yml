@@ -1,5 +1,5 @@
 x-base-image: &base-image
-  image: whiterabbitsecurity/openxpki3:3.32.8
+  image: whiterabbitsecurity/openxpki3:3.32.16
 
 services:
   db:
