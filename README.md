@@ -113,6 +113,32 @@ In case you have `make` installed you can also just run `make compose` which doe
 
 The system should now be up and running and you can access the WebUI via https://localhost:8443/webui/index/.
 
+> [!NOTE]
+> The container uses a self-signed certificate by default, so your browser will
+> show a security warning the first time - accept it to continue. If port 8443
+> is already in use on your host, change the port mapping of the `web` service
+> in `docker-compose.yml`.
+
+### Logging In
+
+Open the WebUI URL above and pick the **Test Accounts** login stack. On an
+unmodified configuration the password for every test account is `openxpki`:
+
+| Username | Password | Role |
+|----------|----------|------|
+| `alice`, `bob` | `openxpki` | User |
+| `rose`, `rob`, `raop` | `openxpki` | RA Operator |
+| `caop` | `openxpki` | CA Operator |
+
+For day-to-day administration log in as an operator (e.g. `raop`). The accounts,
+roles and the `Testing` login stack are defined in
+`config.d/realm.tpl/auth/handler.yaml` and `auth/stack.yaml`.
+
+> [!CAUTION]
+> These accounts use hardcoded passwords for demonstration only. Remove the
+> `Testing` entry from `auth/stack.yaml` and review `auth/handler.yaml` before
+> any non-demo use.
+
 You can already have a look around but to issue certificates you need to generate and import your Root and Issuing CA certificates and load them into the system.
 
 ### Web Server: Apache or nginx
