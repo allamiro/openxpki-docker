@@ -15,8 +15,9 @@ services:
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
-      timeout: 3s
+      timeout: 5s
       retries: 5
+      start_period: 30s
     environment:
       MYSQL_DATABASE: openxpki
       MYSQL_USER: openxpki
@@ -45,8 +46,11 @@ services:
     healthcheck:
       test: /usr/bin/openxpkictl status server
       interval: 5s
-      timeout: 3s
+      timeout: 10s
       retries: 5
+      # Give the server time to boot before counting failures; the perl
+      # status call is slow on first start (and under qemu emulation).
+      start_period: 90s
     depends_on:
       db:
         condition: service_healthy
@@ -69,8 +73,9 @@ services:
     healthcheck:
       test: /usr/bin/openxpkictl status client
       interval: 5s
-      timeout: 3s
+      timeout: 10s
       retries: 5
+      start_period: 90s
     depends_on:
       server:
         condition: service_healthy
@@ -90,8 +95,9 @@ services:
     healthcheck:
       test: wget -q http://localhost/healthcheck/ping
       interval: 5s
-      timeout: 3s
+      timeout: 5s
       retries: 5
+      start_period: 60s
     depends_on:
       client:
         condition: service_healthy

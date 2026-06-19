@@ -21,7 +21,7 @@ prune:  ## prune unused images (all!)
 init: openxpki-config  ## clone initial config from github
 
 openxpki-config:
-	git clone  https://github.com/openxpki/openxpki-config --single-branch --branch=community
+	git clone  https://github.com/allamiro/openxpki-config --single-branch --branch=community
 
 compose: openxpki-config  ## call docker-compose, implies init
 	docker compose up -d web

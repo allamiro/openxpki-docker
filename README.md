@@ -22,7 +22,7 @@ This repository contains a `docker-compose.yml` that spawns four containers
 Before running compose you **MUST** place a configuration directory named `openxpki-config` in the current directory, the easiest way is to clone the branch `community` from the `openxpki-config` repository at github.
 
 ```bash
-$ git clone https://github.com/openxpki/openxpki-config.git --single-branch --branch=community
+$ git clone https://github.com/allamiro/openxpki-config.git --single-branch --branch=community
 ```
 
 For additional details on configuration, have a look at the [QUICKSTART](https://github.com/openxpki/openxpki-config/blob/community/QUICKSTART.md) document in the configuration repository.
@@ -114,6 +114,27 @@ In case you have `make` installed you can also just run `make compose` which doe
 The system should now be up and running and you can access the WebUI via https://localhost:8443/webui/index/.
 
 You can already have a look around but to issue certificates you need to generate and import your Root and Issuing CA certificates and load them into the system.
+
+### Web Server: Apache or nginx
+
+The compose file ships two interchangeable web frontends, both serving the WebUI
+and the RPC/SCEP/EST endpoints:
+
+- `web` (default) runs **Apache** and is what `make compose` / `docker compose up -d web` start.
+- `web-nginx` runs **nginx** for those who prefer it. Start it instead of `web`:
+
+```bash
+$ docker compose up -d web-nginx
+```
+
+Run only one of them at a time - they publish the same ports (8080/8443).
+
+> [!NOTE]
+> The nginx frontend covers the WebUI, public RPC/SCEP/EST enrollment, the
+> healthcheck and CRL/CA download. TLS **client-certificate authentication**
+> (e.g. EST reenrollment) is only supported by the Apache frontend, because it
+> forwards the client certificate to the backend in a way stock nginx cannot
+> reproduce. Use `web` (Apache) if you need certificate based authentication.
 
 ## Issuing CA Setup
 
