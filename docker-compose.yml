@@ -54,7 +54,6 @@ services:
   client:
     << : *base-image
     container_name: OpenXPKI_Client
-    image: whiterabbitsecurity/openxpki3
     command: /usr/bin/openxpkictl start client --nd
     user: openxpkiclient:openxpkiclient
     group_add:
@@ -101,6 +100,9 @@ services:
     << : *web-apache
     container_name: OpenXPKI_WebUI_nginx
     command: /usr/bin/start-webserver nginx
+    # Don't inherit the ports from web-apache, otherwise the two web
+    # containers clash on 8080/8443 when both are started.
+    ports: []
     volumes:
       - ./openxpki-config/contrib/nginx-openxpki-site:/etc/nginx/sites-enabled/openxpki
       - ./openxpki-config/tls/:/etc/openxpki/tls/
