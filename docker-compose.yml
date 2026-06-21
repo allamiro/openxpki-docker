@@ -40,9 +40,11 @@ services:
       - openxpkisocket:/run/openxpkid
       - openxpkidbsocket:/var/run/mysqld/
       - openxpkidownload:/var/www/download
-      # this will not work on all OS
-      - "/etc/timezone:/etc/timezone:ro"
-      - "/etc/localtime:/etc/localtime:ro"
+    # Set the container timezone here instead of bind-mounting /etc/timezone
+    # and /etc/localtime from the host: those paths differ across host OSes
+    # (e.g. /etc/timezone does not exist on RHEL/Fedora) and break podman.
+    environment:
+      TZ: Etc/UTC
     healthcheck:
       test: /usr/bin/openxpkictl status server
       interval: 5s
