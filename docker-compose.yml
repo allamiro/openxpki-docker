@@ -1,6 +1,11 @@
 x-base-image: &base-image
   image: whiterabbitsecurity/openxpki3:3.32.16
 
+# Note on the ":z" suffix on host (./...) bind mounts below:
+# it tells SELinux-enabled hosts (RHEL/Fedora, typically with podman) to
+# relabel the content so the containers can read it. It is a no-op on hosts
+# without SELinux (e.g. Docker Desktop), so the file works on docker and podman.
+
 services:
   db:
 #    restart: always
@@ -11,7 +16,7 @@ services:
     volumes:
       - openxpkidb:/var/lib/mysql
       - openxpkidbsocket:/var/run/mysqld/
-      - ./openxpki-config/contrib/sql/schema-mariadb.sql:/docker-entrypoint-initdb.d/schema-mariadb.sql
+      - ./openxpki-config/contrib/sql/schema-mariadb.sql:/docker-entrypoint-initdb.d/schema-mariadb.sql:z
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
@@ -34,8 +39,8 @@ services:
     tmpfs:
       - /tmp
     volumes:
-      - ./openxpki-config:/etc/openxpki
-      - ./config/client.key:/home/pkiadm/.oxi/client.key
+      - ./openxpki-config:/etc/openxpki:z
+      - ./config/client.key:/home/pkiadm/.oxi/client.key:z
       - openxpkilog:/var/log/openxpki
       - openxpkisocket:/run/openxpkid
       - openxpkidbsocket:/var/run/mysqld/
@@ -67,7 +72,7 @@ services:
     tmpfs:
       - /tmp
     volumes:
-      - ./openxpki-config/client.d:/etc/openxpki/client.d
+      - ./openxpki-config/client.d:/etc/openxpki/client.d:z
       - openxpkilogui:/var/log/openxpki-client
       - openxpkisocket:/run/openxpkid
       - openxpkiclientsocket:/run/openxpki-clientd
@@ -90,8 +95,8 @@ services:
       - "8080:80/tcp"
       - "8443:443/tcp"
     volumes:
-      - ./openxpki-config/contrib/apache2-openxpki-site.conf:/etc/apache2/sites-enabled/openxpki.conf
-      - ./openxpki-config/tls/:/etc/openxpki/tls/
+      - ./openxpki-config/contrib/apache2-openxpki-site.conf:/etc/apache2/sites-enabled/openxpki.conf:z
+      - ./openxpki-config/tls/:/etc/openxpki/tls/:z
       - openxpkiclientsocket:/run/openxpki-clientd
       - openxpkidownload:/var/www/download:ro
     healthcheck:
@@ -112,8 +117,8 @@ services:
     # containers clash on 8080/8443 when both are started.
     ports: []
     volumes:
-      - ./openxpki-config/contrib/nginx-openxpki-site:/etc/nginx/sites-enabled/openxpki
-      - ./openxpki-config/tls/:/etc/openxpki/tls/
+      - ./openxpki-config/contrib/nginx-openxpki-site:/etc/nginx/sites-enabled/openxpki:z
+      - ./openxpki-config/tls/:/etc/openxpki/tls/:z
       - openxpkiclientsocket:/run/openxpki-clientd
       - openxpkidownload:/var/www/download:ro
 
