@@ -23,6 +23,9 @@ init: openxpki-config  ## clone initial config from github
 openxpki-config:
 	git clone  https://github.com/allamiro/openxpki-config --single-branch --branch=community
 
+setup: openxpki-config  ## generate client.key, cli.yaml and the datavault secret
+	@bash init-config.sh
+
 compose: openxpki-config  ## call docker-compose, implies init
 	docker compose up -d web
 

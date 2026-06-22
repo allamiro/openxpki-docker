@@ -32,47 +32,57 @@ git clone https://github.com/allamiro/openxpki-config.git --single-branch --bran
 
 ## 3. Mandatory setup (before the first start)
 
-### 3a. CLI authentication key
-
-The command line tools authenticate with a key pair.
+Two things are required before the server can start: a **CLI authentication key**
+(`config/client.key` + its public key in `cli.yaml`) and a **datavault secret**
+(`svault` in `crypto.yaml`). **Do not hand-edit these YAML files** — a single
+mis-indented line crashes the server with a YAML parse error. Use the helper:
 
 ```bash
+make setup
+# or directly:
+./init-config.sh
+```
+
+This will:
+- generate `config/client.key` (only if missing) and `chmod 644` it,
+- write `openxpki-config/config.d/system/cli.yaml` with the matching public key
+  and correct indentation,
+- generate a 64-hex `svault` secret into
+  `openxpki-config/config.d/system/crypto.yaml` **only if it isn't set yet**
+  (it never overwrites an existing one), and print it once.
+
+> ⚠️ **Save the printed `svault` value somewhere safe.** Losing it makes all
+> encrypted data in the database unrecoverable. The script prints it only the
+> first time it generates it.
+
+It is safe to re-run `make setup`: `cli.yaml` is always regenerated from the key,
+and the datavault secret is left untouched once set.
+
+<details>
+<summary>What it does under the hood (if you prefer to run it manually)</summary>
+
+```bash
+# CLI key
 mkdir -p config
-openssl ecparam -name prime256v1 -genkey -noout -out config/client.key
+[ -f config/client.key ] || openssl ecparam -name prime256v1 -genkey -noout -out config/client.key
 chmod 644 config/client.key
-openssl pkey -in config/client.key -pubout
+
+# cli.yaml (note the 4 / 8 / 9-space indentation)
+PUB="$(openssl pkey -in config/client.key -pubout)"
+{
+  echo "# Public keys to authenticate requests over the CLI interface"
+  echo "auth:"
+  echo "    admin:"
+  echo "        key: |"
+  echo "$PUB" | sed 's/^/         /'
+  echo "        role: RA Operator"
+} > openxpki-config/config.d/system/cli.yaml
+
+# datavault secret (only if still the placeholder)
+VAULT="$(openssl rand -hex 32)"; echo "SAVE THIS: $VAULT"
+sed -i "s|.*##SVAULTKEY##.*|        value: $VAULT|" openxpki-config/config.d/system/crypto.yaml
 ```
-
-Put the printed public key into `openxpki-config/config.d/system/cli.yaml`:
-
-```yaml
-auth:
-    admin:
-        key: |
-         -----BEGIN PUBLIC KEY-----
-         ...your public key...
-         -----END PUBLIC KEY-----
-        role: RA Operator
-```
-
-### 3b. Datavault secret
-
-This key encrypts confidential data in the database. **Keep a copy in a safe
-place — losing it means losing access to all encrypted data.**
-
-```bash
-openssl rand -hex 32
-```
-
-Put the 64-character value into `openxpki-config/config.d/system/crypto.yaml`
-under the `svault` group:
-
-```yaml
-    svault:
-        label: Secret group for datavault encryption
-        method: literal
-        value: <your 64-character hex value>
-```
+</details>
 
 ## 4. (Recommended) Web server certificate
 
